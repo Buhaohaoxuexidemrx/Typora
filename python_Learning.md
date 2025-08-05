@@ -509,6 +509,52 @@ for num in square(4):
 ### 3 上下文管理器 ###
 
 
+❗️***上下文管理器（Context Manager） 是一种用于精确控制资源分配和释放的机制，通过 with 语句自动管理资源的生命周期（如文件操作、数据库连接、线程锁等）***
+
+***用例引入：文件操作***
+```python
+with open('example.txt', 'r') as file:
+    content = file.read()
+    print(content)
+# 文件会在 with 块结束后自动关闭，即使发生异常
+```
+
+***基础用法***
+
+>[!note]
+>**1.\_\_enter\_\_方法在进入 with 块时调用，返回值赋值给 as 后的变量**
+>**2.\_\_exit\_\_方法在退出 with 块时调用，处理异常（参数为异常类型、值、traceback）
+>3.通过两个方法的调用实现上下文管理**
+```python
+import time
+class Timer:
+      def __init__(self):
+          self.elapsed = 0
+
+      def __enter__(self):
+          self.start = time.perf_counter()
+          return self  # 可返回对象供 with 块使用
+
+      def __exit__(self, exc_type, exc_val, exc_tb):
+          self.stop = time.perf_counter()
+          self.elapsed = self.stop - self.start
+          return False  # 若返回 True 会抑制异常
+
+# 使用示例
+def func():
+		nums = []
+		for i in range(10000):
+				nums.append(i**2)
+with Timer() as timer:
+		func()
+		
+print(timer.elapsed)
+```
+
+>[!warning]
+>**1.若 with 块内发生异常，会传递给\_\_exit\_\_ 的三个参数
+>2.\_\_exit\_\_ 返回 True 表示抑制异常（隐藏错误），False 则向上传播异常**
+
 
 
 
