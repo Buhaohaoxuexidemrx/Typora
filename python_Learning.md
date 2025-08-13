@@ -556,8 +556,196 @@ print(timer.elapsed)
 >2.\_\_exit\_\_ 返回 True 表示抑制异常（隐藏错误），False 则向上传播异常**
 
 
-
-
-
-
 ---
+### 4 并发编程 ###
+
+#### 4.1 线程 ####
+
+
+***❗️基础语法：创建线程***
+```python
+from threading import Thread
+
+def task():
+		...
+thread1 = Thread(target = task, args = )
+thread2 = Thread(target = task, args = )
+
+thread1.start()
+thread2.start()
+
+thread1.join()		# 主线程等待线程1结束
+thread2.join()		# 主线程等待线程2结束
+```
+
+***❗️通过继承类来创建线程：循环打印***
+
+```python
+from threading import Thread
+import time
+
+class MyThread(Thread):
+		def __init__(self, name:str, count:int)
+				super().__init__()
+				
+				self.setName(name)			# 设置线程的名字
+				self.count = count
+		
+		def run(self) -> None:
+				for n in range(self.count):
+						print(f"{self.getName()} - {n}\n", end = '')		
+						time.sleep(0.01)
+
+t_1 = MyThread("A",10)
+t_2 = MyThread("B",10)
+
+t_1.start()
+t_2.start()
+```
+
+***❗️守护线程***
+
+
+
+>[!note]
+>***1.守护线程会在主线程结束的时候自动结束***
+>***2.主线程则需要等到所有非守护线程结束才能结束***
+>***3.守护线程一般用于非关键线程，比如日志***
+
+
+```python
+# 方法一：在类中直接设置self.setDaemon(True)
+# 方法二：在创建线程时设置
+thread = Thread(target = task, daemon = True)
+```
+
+***❗️线程安全队列***
+
+
+
+>[!note]
+>***✅线程安全队列的"安全"主要体现在它能够确保在多线程环境下对共享数据的访问不会导致竞态条件、数据损坏或不一致等问题。***
+>>    ​	**1. 操作的原子性（Atomic Operations）
+>>​	线程安全队列的所有操作（如put()、get()等）都是原子性的，这意味着：
+>>（1）每个操作在执行过程中不会被其他线程中断
+>>（2）其他线程看到的是操作完成前或完成后的状态，不会看到中间状态
+>>​	例如，当多个线程同时调用put()时，队列内部会确保每个元素被完整地、按顺序添加到队列中，不会出现元素丢失或顺序混乱的情况。**
+>
+>>**2. 内置同步机制
+>>线程安全队列内部使用了多种同步原语来保证安全：
+>>（1）互斥锁（Lock）：保护队列内部数据结构不被并发访问
+>>（2）条件变量（Condition Variable）：协调生产者和消费者线程
+>>		当队列为空时，消费者线程会自动等待
+>>		当队列有空间时，生产者线程会被通知**
+
+
+```python
+from queue import Queue						#	模块queue中导入Queue
+q = Queue()												# 创建队列
+q.put(item, block = False)				# 队列中放入item，block阻塞，False指队列满了继续放会抛出异常，为True则会等待
+q.put(item, timeout = 3)					# timeout指等候时间
+q.get(block = False)							#	从队列中取出item，False指若队列为空则抛出异常，True则会等待
+q.get(timeout = 10)								#	timeout指等候时间
+q.qsize()													#	查看队列大小
+q.empty()													#	查看队列是否为空
+q.full()													#	查看队列是否为满
+```
+
+
+
+
+#### 4.2 线程锁 ####
+
+
+***❗️当多个线程在同一时刻访问相同数据时可能产生数据丢失、覆盖、不完整等问题，线程锁是用来解决这一问题的重要手段。***
+
+
+```python
+#	用法一：try-finally模式
+from threading import Lock
+lock = Lock()
+lock.acquire()
+try:
+		# do something
+finally:
+		lock.release()
+		
+		
+#	用法二：with模式
+from threading import Lock
+
+lock = Lock()
+with lock:
+		#	do something
+```
+#### 4.3 线程池 ####
+
+
+>[!note]
+>***1.线程的创建和销毁相对比较昂贵***
+>***2.频繁的创建销毁线程不利于高性能***
+>***3.线程池是python提供的便于线程管理和提高性能的工具***
+
+|<img src="/Users/heartye/Desktop/截屏2025-08-12 18.37.18.png" alt="线程的生命周期" style="zoom:50%;" />|
+|:--:|
+|*图1 线程的生命周期*|
+
+**新建线程系统需要分配资源，终止线程系统需要回收资源，如果可以重用线程，则可以减去新建/终止的开销**
+
+| <img src="/Users/heartye/Desktop/截屏2025-08-12 18.52.53.png" style="zoom: 33%;" /> |
+| :----------------------------------------------------------: |
+|                     *图2 线程池分配方式*                     |
+
+**ThreadPoolExcutor的使用语法**
+```python
+from concurrent.futures import ThreadPoolExcutor, as_completed
+```
+***用法一：map函数（简单，注意map函数的结果和入参顺序是对应的）***
+
+```python
+with ThreadPoolExcutor() as pool:
+
+		results = pool.map(craw, urls)
+		
+		for result in results:
+				print(result)
+```
+
+***用法二：future模式（更强大，注意如果用的是as_completed顺序是不定的）***
+
+```python
+with ThreadPoolExcutor() as pool:
+
+		futures = [pool.submit(craw, url) for url in urls]
+		for future in futures:
+				print(future.result())
+		for future in as_completed(futures):
+				print(future.result())
+```
+
+#### 4.4 多进程 ####
+
+
+>[!note]
+>***❗️如果是CPU密集型计算，多线程反而会降低执行速度***
+>
+>>***1.虽然有全局解释器锁GIL，但是因为有IO的存在，多线程依然可以加速运行。***
+>>***2.对于CPU密集型计算，线程的自动切换，反而变成了负担，多线程甚至减慢了运行速度。***
+>
+>***❗️multiprocessing模块就是python为了解决GIL缺陷引入的模块，原理是用多进程在多CPU上并行执行。***
+>
+
+|语法条目|多线程|多进程|
+|:-:|:--|:-|
+|引入模块|`from threading import Thread`|`from multiprocessing import Process`|
+|新建<br>启动<br>等待结束|`t = Thread(target = func, args = (100,))`<br>`t.start()`<br>`t.join()`|`p = Process(target = f, args = ('Bob',))`<br>`p.start()`<br>`p.join()`|
+|数据通信|`from queue import Queue`<br>`q = Queue()`<br>`q.put(item)`<br>`item = q.get()`|`from multiprocessing import Queue`<br>`q = Queue()`<br>`q.put([42, None, 'Hello'])`<br>`item = q.get()`|
+|线程安全加锁|`from threading import Lock`<br>`lock = Lock()`<br>`with lock:`<br>`   # do something`|`from multiprocessing import Lock`<br>`lock = Lock()`<br>`with lock:`<br>`   # do something`|
+|池化技术|`from concurrent.futures import ThreadPoolExecutor`<br><br>`with ThreadPoolExecutor as executor: 		 `<br>`		#	方法一								   	 `<br>`		results = executor.map(func, [1,2,3])		`<br>`		#	方法二										`<br>`		future = executor.sumbit(func, 1)				`<br>`		result = future.result()						`|`from concurrent.futures import ProcessPoolExecutor`<br><br>`with ProcessPoolExecutor as executor: 		 `<br>`		#	方法一								   	 `<br>`		results = executor.map(func, [1,2,3])		`<br>`		#	方法二										`<br>`		future = executor.sumbit(func, 1)				`<br>`		result = future.result()						`|
+
+
+### 5 异步IO ###
+
+#### 5.1 协程 ####
+#### 5.2 创建任务 ####
+#### 5.3 任务进阶 ####
