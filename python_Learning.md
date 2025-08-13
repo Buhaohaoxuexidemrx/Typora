@@ -741,7 +741,7 @@ with ThreadPoolExcutor() as pool:
 |新建<br>启动<br>等待结束|`t = Thread(target = func, args = (100,))`<br>`t.start()`<br>`t.join()`|`p = Process(target = f, args = ('Bob',))`<br>`p.start()`<br>`p.join()`|
 |数据通信|`from queue import Queue`<br>`q = Queue()`<br>`q.put(item)`<br>`item = q.get()`|`from multiprocessing import Queue`<br>`q = Queue()`<br>`q.put([42, None, 'Hello'])`<br>`item = q.get()`|
 |线程安全加锁|`from threading import Lock`<br>`lock = Lock()`<br>`with lock:`<br>`   # do something`|`from multiprocessing import Lock`<br>`lock = Lock()`<br>`with lock:`<br>`   # do something`|
-|池化技术|`from concurrent.futures import ThreadPoolExecutor`<br><br>`with ThreadPoolExecutor as executor: 		 `<br>`		#	方法一								   	 `<br>`		results = executor.map(func, [1,2,3])		`<br>`		#	方法二										`<br>`		future = executor.sumbit(func, 1)				`<br>`		result = future.result()						`|`from concurrent.futures import ProcessPoolExecutor`<br><br>`with ProcessPoolExecutor as executor: 		 `<br>`		#	方法一								   	 `<br>`		results = executor.map(func, [1,2,3])		`<br>`		#	方法二										`<br>`		future = executor.sumbit(func, 1)				`<br>`		result = future.result()						`|
+|池化技术|`from concurrent.futures import ThreadPoolExecutor`<br><br>`with ThreadPoolExecutor as executor:`<br>`		#	方法一`<br>`		results = executor.map(func, [1,2,3])`<br>`		#	方法二`<br>`		future = executor.sumbit(func, 1）`<br>`		result = future.result()`|`from concurrent.futures import ProcessPoolExecutor`<br><br>`with ProcessPoolExecutor as executor:`<br>`		#	方法一`<br>`		results = executor.map(func, [1,2,3])`<br>`		#	方法二`<br>`		future = executor.sumbit(func, 1)`<br>`		result = future.result()`|
 
 
 ### 5 异步IO ###
